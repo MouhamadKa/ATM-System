@@ -14,10 +14,12 @@ class Bank:
     def __init__(self, name, bank_swift_code):
         self.name = name
         self.bank_code = bank_swift_code
-        self.customers = []
+        self.accounts = {}
         
     def add_customer(self, customer):
-        self.customers.append(customer)
+        # Here instead of adding the custimer himself, now I loop through all his accounts and add them to the bank
+        for account in customer.accounts.values():
+            self.accounts[account.account_number] = account
     
     
 class Authenticator:
@@ -25,10 +27,9 @@ class Authenticator:
         self.bank = bank
         
     def authenticate(self, card_number, pin):
-        for customer in self.bank.customers:
-            for account in customer.accounts:
-                if account.linked_card.number == card_number and account.linked_card.pin == pin:
-                    return account          
+        for account in self.bank.accounts.values():
+            if account.linked_card and account.linked_card.number == card_number and account.linked_card.get_pin() == pin:
+                return account
         return None
     
     
@@ -38,15 +39,15 @@ class Customer:
         self.address = address
         self.phone_number = phone_number
         self.email = email
-        self.accounts = []
+        self.accounts = {}
         
     def add_account(self, account):
-        self.accounts.append(account)
+        self.accounts[account.account_number] = account
         
         
 class Account:
     def __init__(self, number):
-        self.number = number 
+        self.account_number = number 
         self.balance = 0
         self.linked_card = None
         self.transaction_history = []
@@ -68,8 +69,18 @@ class Account:
 class Card:
     def __init__(self, number, pin):
         self.number = number
-        self.pin = pin
+        self.__pin = pin
     
+    def get_pin(self):
+        return self.__pin
+    
+    def set_pin(self, old_pin, new_pin):
+        if old_pin == self.__pin:
+            self.__pin = new_pin
+            return True
+        else:
+            return False            
+ 
     
 class CardReader:
     def __init__(self, atm, bank):
